@@ -7,6 +7,7 @@ package it.polito.tdp.imdb;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.imdb.model.Actor;
 import it.polito.tdp.imdb.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,6 +19,7 @@ import javafx.scene.control.TextField;
 public class FXMLController {
 	
 	private Model model;
+	private boolean grafoCreato = false;
 
     @FXML // ResourceBundle that was given to the FXMLLoader
     private ResourceBundle resources;
@@ -35,10 +37,10 @@ public class FXMLController {
     private Button btnSimulazione; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxGenere"
-    private ComboBox<?> boxGenere; // Value injected by FXMLLoader
+    private ComboBox<String> boxGenere; // Value injected by FXMLLoader
 
     @FXML // fx:id="boxAttore"
-    private ComboBox<?> boxAttore; // Value injected by FXMLLoader
+    private ComboBox<Actor> boxAttore; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtGiorni"
     private TextField txtGiorni; // Value injected by FXMLLoader
@@ -48,16 +50,56 @@ public class FXMLController {
 
     @FXML
     void doAttoriSimili(ActionEvent event) {
+    	this.txtResult.clear();
+    	if(!this.grafoCreato) {
+    		this.txtResult.appendText("Creare il grafo!\n");
+    		return;
+    	}
+    	Actor a = this.boxAttore.getValue();
+    	if(a==null) {
+    		this.txtResult.appendText("Selezionare l'attore\n");
+    		return;
+    	}
+    	this.txtResult.appendText(this.model.getSimili(a));
 
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	this.txtResult.clear();
+    	String genre = this.boxGenere.getValue();
+    	if(genre==null) {
+    		this.txtResult.appendText("Selezionare un genere\n");
+    		return;
+    	}
+    	this.model.creaGrafo(genre);
+    	this.grafoCreato = true;
+    	this.txtResult.appendText("Grafo creato!\n# vertici: "+this.model.getNumVertici()+"\n# archi: "+this.model.getNumEdges()+"\n");
+    	this.boxAttore.getItems().clear();
+    	this.boxAttore.getItems().addAll(this.model.getAttori());
 
     }
 
     @FXML
     void doSimulazione(ActionEvent event) {
+    	this.txtResult.clear();
+    	if(!this.grafoCreato) {
+    		this.txtResult.appendText("Creare il grafo!\n");
+    		return;
+    	}
+    	if(this.txtGiorni.getText().equals("")) {
+    		this.txtResult.appendText("Selezionare un numero di giorni\n");
+    		return;
+    	}
+    	int giorni = 0;
+    	try {
+    		giorni = Integer.parseInt(this.txtGiorni.getText());
+    	}catch(NumberFormatException e) {
+    		this.txtResult.appendText("Il numero di giorni deve essere un intero positivo\n");
+    		return;
+    	}
+    	this.txtResult.appendText(this.model.doSimulazione(giorni));
+    	
 
     }
 
@@ -75,5 +117,6 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	this.boxGenere.getItems().addAll(this.model.getGeneri());
     }
 }
